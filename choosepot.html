@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>화분 선택하기</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chiron+Sung+HK:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: "Gowun Dodum", sans-serif;
+      background-color: #e8f5e9;
+      padding: 30px;
+      color: #2e7d32;
+      text-align: center;
+      font-family: "Chiron Sung HK", serif;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    ul#potList {
+      list-style: none;
+      padding: 0;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    ul#potList li {
+      background-color: #a5d6a7;
+      padding: 15px 20px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      font-size: 1.2em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pot-name {
+      flex-grow: 1;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .delete-btn {
+      background-color: #e57373;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .delete-btn:hover {
+      background-color: #ef5350;
+    }
+
+    .nav-buttons {
+      margin-top: 30px;
+    }
+
+    .nav-buttons button {
+      background-color: #c8e6c9;
+      color: #2e7d32;
+      font-size: 1em;
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .nav-buttons button:hover {
+      background-color: #a5d6a7;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌿 화분 선택하기</h1>
+  <ul id="potList"></ul>
+
+  <div class="nav-buttons">
+    <button onclick="location.href='makepot.html'"> 새 화분 만들기</button>
+    <button onclick="location.href='index.html'"> 처음 화면으로</button>
+  </div>
+
+  <script>
+    const potList = document.getElementById("potList");
+    let pots = JSON.parse(localStorage.getItem("pots")) || [];
+
+    function renderPots() {
+      potList.innerHTML = "";
+
+      if (pots.length === 0) {
+        potList.innerHTML = "<li>만들어진 화분이 없습니다. 새 화분을 만들어보세요!</li>";
+        return;
+      }
+
+      pots.forEach((pot, idx) => {
+        const li = document.createElement("li");
+
+        // 화분 이름 클릭 → 메모 작성 페이지로 이동
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = pot.name;
+        nameSpan.className = "pot-name";
+        nameSpan.onclick = () => {
+          localStorage.setItem("selectedPot", pot.name);
+          location.href = "memoWrite.html";
+        };
+
+        // 삭제 버튼
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "삭제";
+        delBtn.className = "delete-btn";
+        delBtn.onclick = (event) => {
+          event.stopPropagation();
+          if (confirm(`'${pot.name}' 화분을 삭제할까요?`)) {
+            pots.splice(idx, 1);
+            localStorage.setItem("pots", JSON.stringify(pots));
+
+            const allData = JSON.parse(localStorage.getItem("memoData")) || {};
+            delete allData[pot.name];
+            localStorage.setItem("memoData", JSON.stringify(allData));
+
+            renderPots();
+          }
+        };
+
+        li.appendChild(nameSpan);
+        li.appendChild(delBtn);
+        potList.appendChild(li);
+      });
+    }
+
+    renderPots();
+  </script>
+</body>
+</html>

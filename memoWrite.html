@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>메모 작성</title>
+  <style>
+    body {
+      background-color: white;
+      font-family: "Gowun Dodum", sans-serif;
+      text-align: center;
+      padding: 40px;
+      color: black;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+
+    textarea {
+      width: 80%;
+      height: 150px;
+      font-size: 1em;
+      padding: 10px;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      resize: none;
+    }
+
+    .button {
+      background-color: #cccccc;
+      color: black;
+      font-size: 1em;
+      padding: 10px 20px;
+      margin: 15px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: "Chiron Sung HK", serif;
+    }
+
+    img {
+      height: 250px;
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="potTitle">화분 이름 불러오는 중...</h1>
+
+  <!-- 식물 이미지 -->
+  <div>
+    <img id="goodPlant" src="" alt="좋은 채소">
+    <img id="badPlant" src="" alt="나쁜 채소">
+  </div>
+
+  <!-- 메모 입력 -->
+  <div>
+    <textarea id="memo" placeholder="오늘의 메모를 입력하세요 :)"></textarea>
+  </div>
+
+  <!-- 버튼 -->
+  <div>
+    <button class="button" onclick="saveMemo('good')">좋은 하루 😊</button>
+    <button class="button" onclick="saveMemo('bad')">나쁜 하루 😔</button>
+    <button class="button" onclick="location.href='memoList.html'"> 메모 리스트</button>
+    <button class="button" onclick="location.href='index.html'"> 처음으로</button>
+  </div>
+
+  <script>
+    const potName = localStorage.getItem("selectedPot");
+    const title = document.getElementById("potTitle");
+    const memoInput = document.getElementById("memo");
+
+    if (!potName) {
+      alert("선택된 화분이 없어요!");
+      location.href = "index.html";
+    } else {
+      title.innerText = `'${potName}' 화분`;
+    }
+
+    const plantType = localStorage.getItem(`plantType_${potName}`) || "tomato";
+    const maxStage = 4;
+
+    function updateImages() {
+      const data = JSON.parse(localStorage.getItem("memoData")) || {};
+      const thisPot = data[potName] || { good: [], bad: [] };
+      const goodCount = thisPot.good.length;
+      const badCount = thisPot.bad.length;
+
+      const goodStage = Math.min(goodCount, maxStage);
+      const badStage = Math.min(badCount, maxStage);
+
+      document.getElementById("goodPlant").src = `images/${plantType}_good_${goodStage}.png`;
+      document.getElementById("badPlant").src = `images/${plantType}_bad_${badStage}.png`;
+    }
+
+    updateImages(); // 초기 이미지 표시
+
+    function saveMemo(type) {
+      const content = memoInput.value.trim();
+      if (content === "") {
+        alert("메모를 입력해주세요!");
+        return;
+      }
+
+      const allData = JSON.parse(localStorage.getItem("memoData")) || {};
+      if (!allData[potName]) {
+        allData[potName] = { good: [], bad: [] };
+      }
+
+      allData[potName][type].push({
+        text: content,
+        date: new Date().toISOString(),
+      });
+
+      localStorage.setItem("memoData", JSON.stringify(allData));
+
+      memoInput.value = ""; // 입력창 비우기
+      updateImages(); // 이미지 갱신
+    }
+  </script>
+</body>
+</html>

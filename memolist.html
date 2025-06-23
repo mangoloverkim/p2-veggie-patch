@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>메모 리스트 </title>
+  <style>
+    body {
+      background-color: white;
+      color: black;
+      font-family: "Gowun Dodum", sans-serif;
+      text-align: center;
+      padding: 40px;
+      font-family: "Chiron Sung HK", serif;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+      font-family: "Chiron Sung HK", serif;
+    }
+    .memo-section {
+      margin: 20px auto;
+      width: 80%;
+      max-width: 700px;
+      text-align: left;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      
+    }
+    .memo-section h2 {
+      color: #000000;
+      margin-bottom: 10px;
+    }
+    .memo-item {
+      border-bottom: 1px solid #ddd;
+      padding: 8px 0;
+    }
+    .memo-item:last-child {
+      border-bottom: none;
+    }
+    .date {
+      font-size: 0.8em;
+      color: #777;
+    }
+    button.button {
+    
+      color: rgb(0, 0, 0);
+      font-size: 1em;
+      padding: 10px 20px;
+      margin: 15px 10px 0 10px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: "Chiron Sung HK", serif;
+    }
+    button.button:hover {
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="title">📋 메모 리스트</h1>
+
+  <div class="memo-section" id="goodMemosSection">
+    <h2>좋은 말 메모 😊</h2>
+    <div id="goodMemos">불러오는 중...</div>
+  </div>
+
+  <div class="memo-section" id="badMemosSection">
+    <h2>나쁜 말 메모 😔</h2>
+    <div id="badMemos">불러오는 중...</div>
+  </div>
+
+  <button class="button" onclick="location.href='index.html'"> 처음 화면으로</button>
+
+  <script>
+    const potName = localStorage.getItem("selectedPot");
+    const title = document.getElementById("title");
+    const goodMemosDiv = document.getElementById("goodMemos");
+    const badMemosDiv = document.getElementById("badMemos");
+
+    if (!potName) {
+      alert("선택된 화분이 없어요!");
+      location.href = "index.html";
+    } else {
+      title.innerText = ` '${potName}' 화분의 메모 리스트`;
+      loadMemos();
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString();
+    }
+
+    function loadMemos() {
+      const allData = JSON.parse(localStorage.getItem("memoData")) || {};
+      const thisPot = allData[potName] || { good: [], bad: [] };
+
+      if (thisPot.good.length === 0) {
+        goodMemosDiv.innerHTML = "<p>좋은 말 메모가 없습니다.</p>";
+      } else {
+        goodMemosDiv.innerHTML = "";
+        thisPot.good.forEach(memo => {
+          const div = document.createElement("div");
+          div.className = "memo-item";
+          div.innerHTML = `<p>${memo.text}</p><div class="date">${formatDate(memo.date)}</div>`;
+          goodMemosDiv.appendChild(div);
+        });
+      }
+
+      if (thisPot.bad.length === 0) {
+        badMemosDiv.innerHTML = "<p>나쁜 말 메모가 없습니다.</p>";
+      } else {
+        badMemosDiv.innerHTML = "";
+        thisPot.bad.forEach(memo => {
+          const div = document.createElement("div");
+          div.className = "memo-item";
+          div.innerHTML = `<p>${memo.text}</p><div class="date">${formatDate(memo.date)}</div>`;
+          badMemosDiv.appendChild(div);
+        });
+      }
+    }
+  </script>
+</body>
+</html>

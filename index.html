@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>나의 텃밭</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chiron+Sung+HK:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #fff;
+      color: #000;
+      font-family: "Chiron Sung HK", serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      user-select: none;
+      overflow-x: auto; /* 가로 스크롤 허용 */
+    }
+
+    #titleScreen {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #fff;
+      cursor: pointer;
+      user-select: none;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 9999;
+      flex-direction: column;
+      gap: 20px;
+    }
+    #titleScreen img {
+      max-width: 80vw;
+      max-height: 60vh;
+      object-fit: contain;
+      user-select: none;
+    }
+    #titleScreen span {
+      font-size: 2em;
+      font-weight: bold;
+      color: #555;
+      user-select: none;
+    }
+
+    #mainScreen {
+      display: none;
+    }
+
+    .pot {
+      position: absolute;
+      width: 960px;
+      height: 480px;
+      border-radius: 20px;
+      cursor: grab;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      user-select: none;
+      background-color: transparent;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+    .pot:active {
+      cursor: grabbing;
+    }
+    .images-row {
+      display: flex;
+      position: relative;
+      gap: 0;
+    }
+    .pot img {
+      width: auto;
+      height: 450px;
+      border-radius: 15px;
+      pointer-events: none;
+      border: none;
+      box-shadow: none;
+      position: relative;
+      z-index: 1;
+    }
+    .pot-name {
+      font-weight: bold;
+      margin-top: 10px;
+      font-size: 1.5em;
+      z-index: 2;
+      position: relative;
+    }
+    .remain-days {
+      font-size: 1em;
+      color: #555;
+      margin-top: 6px;
+      user-select: text;
+      z-index: 2;
+      position: relative;
+    }
+    .delete-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #000000;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      padding: 6px 16px;
+      cursor: pointer;
+      font-size: 1.1em;
+      user-select: none;
+      display: none;
+      z-index: 10;
+    }
+    .pot:hover .delete-btn {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="titleScreen">
+    <img src="images/title.png" alt="나의 텃밭 타이틀" />
+    <span>클릭해서 시작하기</span>
+  </div>
+
+  <div id="mainScreen">
+    <h1>🌱 나의 텃밭</h1>
+    <button onclick="location.href='makepot.html'">새 화분 만들기</button>
+    <div id="potContainer"></div>
+  </div>
+
+  <script>
+    const titleScreen = document.getElementById("titleScreen");
+    const mainScreen = document.getElementById("mainScreen");
+
+    if (!sessionStorage.getItem("titleShown")) {
+      titleScreen.style.display = "flex";
+      mainScreen.style.display = "none";
+
+      titleScreen.addEventListener("click", () => {
+        titleScreen.style.display = "none";
+        mainScreen.style.display = "block";
+        sessionStorage.setItem("titleShown", "true");
+      });
+    } else {
+      titleScreen.style.display = "none";
+      mainScreen.style.display = "block";
+    }
+
+    const container = document.getElementById("potContainer");
+    const pots = JSON.parse(localStorage.getItem("pots")) || [];
+    let positions = JSON.parse(localStorage.getItem("potPositions")) || {};
+
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    pots.forEach(pot => {
+      const potDiv = createPotElement(pot);
+      container.appendChild(potDiv);
+    });
+
+    function createPotElement(pot) {
+      const potDiv = document.createElement("div");
+      potDiv.className = "pot";
+
+      if (positions[pot.name]) {
+        potDiv.style.left = positions[pot.name].left;
+        potDiv.style.top = positions[pot.name].top;
+      } else {
+        potDiv.style.left = pot.x || "20px";
+        potDiv.style.top = pot.y || "20px";
+      }
+
+      const imagesRow = document.createElement("div");
+      imagesRow.className = "images-row";
+
+      const plantType = pot.veg || "tomato";
+
+      const memoData = JSON.parse(localStorage.getItem("memoData")) || {};
+      const thisPotMemo = memoData[pot.name] || { good: [], bad: [] };
+      const maxStage = 4;
+
+      const goodCount = thisPotMemo.good.length;
+      const badCount = thisPotMemo.bad.length;
+      const goodStage = Math.min(goodCount, maxStage);
+      const badStage = Math.min(badCount, maxStage);
+
+      const imgGood = document.createElement("img");
+      imgGood.src = `images/${plantType}_good_${goodStage}.png`;
+      imgGood.alt = "좋은 채소";
+      imagesRow.appendChild(imgGood);
+
+      const imgBad = document.createElement("img");
+      imgBad.src = `images/${plantType}_bad_${badStage}.png`;
+      imgBad.alt = "나쁜 채소";
+      imagesRow.appendChild(imgBad);
+
+      potDiv.appendChild(imagesRow);
+
+      const nameDiv = document.createElement("div");
+      nameDiv.className = "pot-name";
+      nameDiv.textContent = pot.name;
+      potDiv.appendChild(nameDiv);
+
+      const remainDaysDiv = document.createElement("div");
+      remainDaysDiv.className = "remain-days";
+      const createdAt = new Date(pot.createdAt);
+      const now = new Date();
+      const growDays = pot.growDays || 7;
+      const elapsedDays = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+      const remain = growDays - elapsedDays;
+      remainDaysDiv.textContent = remain > 0 ? `남은 기간: ${remain}일` : "기간 종료";
+      potDiv.appendChild(remainDaysDiv);
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "delete-btn";
+      delBtn.textContent = "삭제";
+      delBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (confirm(`'${pot.name}' 화분을 정말 삭제할까요?`)) {
+          const idx = pots.findIndex(p => p.name === pot.name);
+          if (idx > -1) {
+            pots.splice(idx, 1);
+            localStorage.setItem("pots", JSON.stringify(pots));
+          }
+          delete positions[pot.name];
+          localStorage.setItem("potPositions", JSON.stringify(positions));
+          const memoData = JSON.parse(localStorage.getItem("memoData")) || {};
+          if (memoData[pot.name]) {
+            delete memoData[pot.name];
+            localStorage.setItem("memoData", JSON.stringify(memoData));
+          }
+          potDiv.remove();
+        }
+      });
+      potDiv.appendChild(delBtn);
+
+      potDiv.draggable = true;
+
+      potDiv.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", pot.name);
+        e.dataTransfer.setDragImage(potDiv, e.offsetX, e.offsetY);
+        dragOffsetX = e.offsetX;
+        dragOffsetY = e.offsetY;
+      });
+
+      container.addEventListener("dragover", (e) => {
+        e.preventDefault();
+      });
+
+      potDiv.addEventListener("dragend", (e) => {
+        const rect = container.getBoundingClientRect();
+        let left = e.pageX - rect.left - dragOffsetX + "px";
+        let top = e.pageY - rect.top - dragOffsetY + "px";
+
+        potDiv.style.left = left;
+        potDiv.style.top = top;
+
+        positions[pot.name] = { left, top };
+        localStorage.setItem("potPositions", JSON.stringify(positions));
+      });
+
+      potDiv.addEventListener("click", () => {
+        localStorage.setItem("selectedPot", pot.name);
+        location.href = "memoWrite.html";
+      });
+
+      return potDiv;
+    }
+  </script>
+</body>
+</html>
